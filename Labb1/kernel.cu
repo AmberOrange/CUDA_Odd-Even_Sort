@@ -265,6 +265,12 @@ void presentResult(int *array, long long elapsedTime)
         }
     }
 
+	#define CUDA_CHECK_ERROR(result) \
+		cudaStatus = result; \
+		if(cudaStatus != cudaSuccess) { \
+			std::cerr << __FILE__ << ": Error at line " << __LINE__ << ":\n" << cudaGetErrorString(cudaStatus) << std::endl; \
+			goto Error; \
+		}
 
     __host__
     bool sortOnGPU(int *array)
@@ -272,56 +278,70 @@ void presentResult(int *array, long long elapsedTime)
         cudaError_t cudaStatus;
         int *d_array = nullptr;
 
-        cudaStatus = cudaMalloc((void**)&d_array, SEQ_LENGHT * sizeof(int));
-        if(cudaStatus != cudaSuccess)
-        {
-            std::cerr << "cudaMalloc failed!\n";
-            goto Error;
-        }
+        //cudaStatus = cudaMalloc((void**)&d_array, SEQ_LENGHT * sizeof(int));
+        //if(cudaStatus != cudaSuccess)
+        //{
+        //    std::cerr << "cudaMalloc failed!\n";
+        //    goto Error;
+        //}
 
-        cudaStatus = cudaMemcpy(d_array, array, SEQ_LENGHT * sizeof(int), cudaMemcpyHostToDevice);
-        if (cudaStatus != cudaSuccess)
-        {
-            std::cerr << "cudaMemcpy failed!\n";
-            goto Error;
-        }
+		CUDA_CHECK_ERROR(
+			cudaMalloc((void**)&d_array, SEQ_LENGHT * sizeof(int)));
+
+        //cudaStatus = cudaMemcpy(d_array, array, SEQ_LENGHT * sizeof(int), cudaMemcpyHostToDevice);
+        //if (cudaStatus != cudaSuccess)
+        //{
+        //    std::cerr << "cudaMemcpy failed!\n";
+        //    goto Error;
+        //}
+
+		CUDA_CHECK_ERROR(
+			cudaMemcpy(d_array, array, SEQ_LENGHT * sizeof(int), cudaMemcpyHostToDevice));
 
         int nrOfBlocks = (SEQ_LENGHT / 2 + BLOCK_SIZE - 1) / BLOCK_SIZE;
 
         for(int i = 0; i < SEQ_LENGHT / 2; i++)
         {
             gpuSortEven<<<nrOfBlocks, BLOCK_SIZE>>>(d_array);
-            cudaStatus = cudaGetLastError();
-            if (cudaStatus != cudaSuccess)
-            {
-                std::cerr << "gpuSortEven kernel call failed at iteration " << i << "!\n"
-                    << cudaGetErrorString(cudaStatus) << std::endl;
-                goto Error;
-            }
+            //cudaStatus = cudaGetLastError();
+            //if (cudaStatus != cudaSuccess)
+            //{
+            //    std::cerr << "gpuSortEven kernel call failed at iteration " << i << "!\n"
+            //        << cudaGetErrorString(cudaStatus) << std::endl;
+            //    goto Error;
+            //}
+			CUDA_CHECK_ERROR(
+				cudaGetLastError());
 
             gpuSortOdd<<<nrOfBlocks, BLOCK_SIZE>>>(d_array);
-            cudaStatus = cudaGetLastError();
-            if (cudaStatus != cudaSuccess)
-            {
-                std::cerr << "gpuSortOdd kernel call failed at iteration " << i << "!\n"
-                    << cudaGetErrorString(cudaStatus) << std::endl;
-                goto Error;
-            }
+            //cudaStatus = cudaGetLastError();
+            //if (cudaStatus != cudaSuccess)
+            //{
+            //    std::cerr << "gpuSortOdd kernel call failed at iteration " << i << "!\n"
+            //        << cudaGetErrorString(cudaStatus) << std::endl;
+            //    goto Error;
+            //}
+			CUDA_CHECK_ERROR(
+				cudaGetLastError());
         }
 
-        cudaStatus = cudaDeviceSynchronize();
-        if (cudaStatus != cudaSuccess)
-        {
-            std::cerr << "cudaDeviceSynchronize returned error code " << cudaStatus <<" after launching kernel!\n";
-            goto Error;
-        }
+        //cudaStatus = cudaDeviceSynchronize();
+        //if (cudaStatus != cudaSuccess)
+        //{
+        //    std::cerr << "cudaDeviceSynchronize returned error code " << cudaStatus <<" after launching kernel!\n";
+        //    goto Error;
+        //}
+		CUDA_CHECK_ERROR(
+			cudaDeviceSynchronize());
 
-        cudaStatus = cudaMemcpy(array, d_array, SEQ_LENGHT * sizeof(int), cudaMemcpyDeviceToHost);
-        if (cudaStatus != cudaSuccess)
-        {
-            std::cerr << "cudaMemcpy (cudaMemcpyDeviceToHost) failed!\n";
-            goto Error;
-        }
+        //cudaStatus = cudaMemcpy(array, d_array, SEQ_LENGHT * sizeof(int), cudaMemcpyDeviceToHost);
+        //if (cudaStatus != cudaSuccess)
+        //{
+        //    std::cerr << "cudaMemcpy (cudaMemcpyDeviceToHost) failed!\n";
+        //    goto Error;
+        //}
+		CUDA_CHECK_ERROR(
+			cudaMemcpy(array, d_array, SEQ_LENGHT * sizeof(int), cudaMemcpyDeviceToHost));
 
         return true;
 
