@@ -312,7 +312,7 @@ void presentResult(int *array, long long elapsedTime)
         cudaStatus = cudaDeviceSynchronize();
         if (cudaStatus != cudaSuccess)
         {
-            std::cerr << "cudaDeviceSynchronize returned error code " << cudaStatus <<" after launching addKernel!\n";
+            std::cerr << "cudaDeviceSynchronize returned error code " << cudaStatus <<" after launching kernel!\n";
             goto Error;
         }
 
